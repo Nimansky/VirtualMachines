@@ -38,7 +38,9 @@ public enum CMaInstructionType {
     JUMPI,
     DUP,
     // Introduced in Storage Allocation for Variables
-    ALLOC;
+    ALLOC,
+    // Halt instruction to stop program execution
+    HALT;
     //
     private static final Map<String, CMaInstructionType> STRING_TO_ENUM = new HashMap<>();
 

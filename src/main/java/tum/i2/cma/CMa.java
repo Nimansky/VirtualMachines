@@ -12,7 +12,7 @@ public class CMa implements VirtualMachine {
 
     public CMa(CMaInstruction[] instructions) {
         this.instructions = instructions;
-        this.PC = -1;
+        this.PC = 0;
         this.SP = -1;
         this.FP = -1;
         this.EP = -1;
@@ -34,8 +34,8 @@ public class CMa implements VirtualMachine {
         // an interface with step function
 
         while(true) {
-            CMaInstruction insn = instructions[++PC];
-
+            CMaInstruction insn = instructions[PC];
+            PC++;
             execute(insn);
 
             if(insn.getType() == CMaInstructionType.HALT)
@@ -115,13 +115,19 @@ public class CMa implements VirtualMachine {
             case NEG:
                 S[SP] = -S[SP];
                 break;
-            case LOAD:
-                S[SP] = S[S[SP]];
+            case LOAD: {
+                for(int i = 0; i < instruction.getFirstArg(); i++) {
+                    S[SP + i] = S[S[SP] + i];
+                }
                 break;
-            case STORE:
-                S[S[SP]] = S[SP - 1];
+            }
+            case STORE: {
+                for(int i = 0; i < instruction.getFirstArg(); i++) {
+                    S[S[SP] + i] = S[SP - instruction.getFirstArg() + i];
+                }
                 SP--;
                 break;
+            }
             case LOADA:
                 SP++;
                 S[SP] = S[instruction.getFirstArg()];
@@ -139,6 +145,7 @@ public class CMa implements VirtualMachine {
                 if(S[SP] == 0) {
                     PC = instruction.getFirstArg();
                 }
+                SP--;
                 break;
             case JUMPI:
                 PC = instruction.getFirstArg() + S[SP];
@@ -150,6 +157,63 @@ public class CMa implements VirtualMachine {
                 break;
             case ALLOC:
                 SP += instruction.getFirstArg();
+                break;
+            case NEW:
+                if (NP - S[SP] <= EP) {
+                    S[SP] = 0;
+                } else {
+                    NP = NP - S[SP];
+                    S[SP] = NP;
+                }
+                break;
+            case MARK:
+                S[SP+1] = EP;
+                S[SP+2] = FP;
+                SP += 2;
+                break;
+            case CALL: {
+                int tmp = S[SP];
+                S[SP] = PC;
+                FP = SP;
+                PC = tmp;
+                break;
+            }
+            case SLIDE: {
+                int tmp = S[SP];
+                SP = SP - instruction.getFirstArg();
+                S[SP] = tmp;
+                break;
+            }
+            case ENTER:
+                EP = SP + instruction.getFirstArg();
+                if (EP >= NP){
+                    throw new StackOverflowError("Stack Overflow trying to execute ENTER " + instruction.getFirstArg());
+                }
+                break;
+            case RETURN:
+                PC = S[FP];
+                EP = S[FP-2];
+                if (EP >= NP) {
+                    throw new StackOverflowError("Stack Overflow trying to execute RETURN");
+                }
+                SP = FP-3;
+                FP = S[SP+2];
+                break;
+            case LOADRC:
+                SP++;
+                S[SP] = FP + instruction.getFirstArg();
+                break;
+            case LOADR:
+                SP++;
+                S[SP] = FP + instruction.getFirstArg();
+                S[SP] = S[S[SP]];
+                break;
+            case STORER:
+                SP++;
+                S[SP] = FP + instruction.getFirstArg();
+                S[S[SP]] = S[SP - 1];
+                SP--;
+                break;
             case HALT:
                 break;
             default:

@@ -39,6 +39,18 @@ public enum CMaInstructionType {
     DUP,
     // Introduced in Storage Allocation for Variables
     ALLOC,
+    // Introduced in Dynamic Storage Management
+    NEW,
+    // Introduced in Calling/Entering and Exiting/Leaving Functions
+    MARK,
+    CALL,
+    SLIDE,
+    ENTER,
+    RETURN,
+    // Introduced in Access to Variables, Formal Parameters and Returning of Values
+    LOADRC,
+    LOADR,
+    STORER,
     // Halt instruction to stop program execution
     HALT;
     //
@@ -69,6 +81,11 @@ public enum CMaInstructionType {
             case JUMPZ:
             case JUMPI:
             case ALLOC:
+            case LOADRC:
+            case LOADR:
+            case STORER:
+            case SLIDE:
+            case ENTER:
                 return 1;
             default:
                 return 0;
